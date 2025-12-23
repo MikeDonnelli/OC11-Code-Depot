@@ -1,0 +1,34 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:hospitaldb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+  # Ensure SQL init scripts (data.sql) run AFTER Hibernate has created the schema
+  sql:
+    init:
+      mode: always
+  jpa:
+    # Defer datasource initialization to let Hibernate create tables before running data.sql
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+# Logging
+logging:
+  level:
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+# To enable SQL debug logs for troubleshooting, set the environment variable:
+# LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG and/or enable spring.jpa.show-sql=true in application-dev.yml
