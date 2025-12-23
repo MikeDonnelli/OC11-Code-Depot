@@ -18,7 +18,6 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@org.junit.jupiter.api.extension.ExtendWith(com.example.hospital.test.TestLoggerExtension.class)
 class HospitalControllerIntegrationTest {
 
     @Autowired
@@ -73,5 +72,27 @@ class HospitalControllerIntegrationTest {
         // Hospital with id=2 seeded has cardiology with 0 beds -> expect 409
         mockMvc.perform(post("/api/hospitals/2/reserve?specialty=cardiology"))
                 .andExpect(status().isConflict());
+    }
+
+    @org.springframework.boot.test.mock.mockito.MockBean(com.example.hospital.client.DistanceClient.class)
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.example.hospital.client.DistanceClient distanceClient;
+
+    @org.junit.jupiter.api.Test
+    void nearest_selectsNearestHospital() throws Exception {
+        String payload = "{\"from\":{\"lat\":48.85,\"lon\":2.35},\"hospitals\":[{\"id\":1,\"name\":\"A\",\"lat\":48.86,\"lon\":2.36},{\"id\":2,\"name\":\"B\",\"lat\":48.90,\"lon\":2.40}]}";
+
+        // Mock distance responses: A -> 1.0km, B -> 5.0km
+        var respA = new com.example.hospital.client.DistanceClient.RouteResponse(1.0, "0h 2m 0s");
+        var respB = new com.example.hospital.client.DistanceClient.RouteResponse(5.0, "0h 10m 0s");
+
+        org.mockito.Mockito.when(distanceClient.route(org.mockito.Mockito.any(), org.mockito.Mockito.argThat(p -> p != null && p.getLat() == 48.86))).thenReturn(reactor.core.publisher.Mono.just(respA));
+        org.mockito.Mockito.when(distanceClient.route(org.mockito.Mockito.any(), org.mockito.Mockito.argThat(p -> p != null && p.getLat() == 48.90))).thenReturn(reactor.core.publisher.Mono.just(respB));
+
+        mockMvc.perform(post("/api/hospitals/nearest").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hospital.id").value(1))
+                .andExpect(jsonPath("$.distanceKm").value(1.0))
+                .andExpect(jsonPath("$.duration").value("0h 2m 0s"));
     }
 }

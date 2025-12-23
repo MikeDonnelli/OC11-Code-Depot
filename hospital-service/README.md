@@ -7,6 +7,7 @@ Service Spring Boot minimal pour gérer les hôpitaux et la disponibilité par s
 - POST /api/hospitals : créer un hôpital (JSON body)
 - GET  /api/hospitals?specialty=<s>&minBeds=<n> : lister hôpitaux avec >= n lits pour une spécialité
 - POST /api/hospitals/{id}/reserve?specialty=<s> : réserver un lit (POC — décrémente le compteur)
+- POST /api/hospitals/nearest : retourner l'hôpital le plus proche parmi une liste fournie. Body JSON: { "from": {"lat":.., "lon":..}, "hospitals": [ {"id":.., "name":.., "lat":.., "lon":..}, ... ] } — retourne `{ "hospital": <HospitalDTO>, "distanceKm": <double>, "duration": "Hh Mm Ss" }`
 
 ## Run (local)
 

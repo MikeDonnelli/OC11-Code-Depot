@@ -2,6 +2,10 @@ package com.example.hospital.controller;
 
 import com.example.hospital.model.Hospital;
 import com.example.hospital.service.HospitalService;
+import com.example.hospital.client.DistanceClient;
+import com.example.hospital.dto.NearestRequest;
+import com.example.hospital.dto.NearestResponse;
+import com.example.hospital.dto.HospitalDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +18,11 @@ import java.util.List;
 public class HospitalController {
 
     private final HospitalService service;
+    private final DistanceClient distanceClient;
 
-    public HospitalController(HospitalService service) {
+    public HospitalController(HospitalService service, DistanceClient distanceClient) {
         this.service = service;
+        this.distanceClient = distanceClient;
     }
 
     @PostMapping
@@ -37,5 +43,30 @@ public class HospitalController {
         boolean ok = service.reserveBed(id, specialty);
         if (ok) return ResponseEntity.ok("Reserved");
         return ResponseEntity.status(HttpStatus.CONFLICT).body("No beds available or specialty not found");
+    }
+
+    @PostMapping("/nearest")
+    public ResponseEntity<NearestResponse> nearest(@jakarta.validation.Valid @RequestBody NearestRequest req) {
+        if (req.getHospitals() == null || req.getHospitals().isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        NearestResponse best = null;
+        for (HospitalDTO h : req.getHospitals()) {
+            DistanceClient.Point to = new DistanceClient.Point(h.getLat(), h.getLon());
+            DistanceClient.Point from = req.getFrom();
+            try {
+                var r = distanceClient.route(from, to).block();
+                if (r == null) continue;
+                if (best == null || r.getDistanceKm() < best.getDistanceKm()) {
+                    best = new NearestResponse(h, r.getDistanceKm(), r.getDuration());
+                }
+            } catch (Exception e) {
+                // ignore failing entries
+            }
+        }
+
+        if (best == null) return ResponseEntity.status(502).build();
+        return ResponseEntity.ok(best);
     }
 }
