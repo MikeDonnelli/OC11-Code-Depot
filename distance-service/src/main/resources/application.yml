@@ -1,0 +1,10 @@
+server:
+  port: 8082
+
+osrm:
+  baseUrl: https://router.project-osrm.org
+
+logging:
+  level:
+    org.springframework.web: INFO
+    com.example.distance: DEBUG
