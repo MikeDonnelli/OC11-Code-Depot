@@ -12,4 +12,8 @@ public interface HospitalRepository extends JpaRepository<Hospital, Long> {
     // Simple query to fetch hospitals that have at least one specialty with name = :specialty and availableBeds >= :minBeds
     @Query("select h from Hospital h join h.specialties s where lower(s.specialty) = lower(:specialty) and s.availableBeds >= :minBeds")
     List<Hospital> findBySpecialtyWithMinBeds(@Param("specialty") String specialty, @Param("minBeds") int minBeds);
+
+    // Query to fetch all distinct specialties
+    @Query("select distinct s.specialty from SpecialtyAvailability s order by s.specialty")
+    List<String> findAllDistinctSpecialties();
 }

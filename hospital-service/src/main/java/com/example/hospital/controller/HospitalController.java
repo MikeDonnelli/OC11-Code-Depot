@@ -38,6 +38,11 @@ public class HospitalController {
         return service.findBySpecialty(specialty, minBeds);
     }
 
+    @GetMapping("/specialties")
+    public List<String> getAllSpecialties() {
+        return service.getAllSpecialties();
+    }
+
     @PostMapping("/{id}/reserve")
     public ResponseEntity<String> reserve(@PathVariable Long id, @RequestParam String specialty) {
         boolean ok = service.reserveBed(id, specialty);

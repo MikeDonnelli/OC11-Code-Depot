@@ -36,3 +36,11 @@ replay_pid*
 # VS Code
 .vscode/
 
+# Node.js / npm (UI)
+ui/node_modules/
+ui/dist/
+ui/coverage/
+
+# System files
+.DS_Store
+Thumbs.db
