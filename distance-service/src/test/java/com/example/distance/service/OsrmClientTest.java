@@ -17,8 +17,8 @@ class OsrmClientTest {
         JsonNode n = mapper.readTree(json);
         var res = client.toRouteResponse(n);
         assertThat(res).isNotNull();
-        assertThat(res.getDistanceKm()).isEqualTo(1.234);
-        assertThat(res.getDuration()).isEqualTo("0h 3m 20s");
+        assertThat(res.getDistanceKm()).isEqualTo(1.2);
+        assertThat(res.getDuration()).isEqualTo("3m 20s");
     }
 
     @Test
@@ -27,7 +27,7 @@ class OsrmClientTest {
         JsonNode n = mapper.readTree(json);
         var res = client.toRouteResponse(n);
         assertThat(res.getDistanceKm()).isEqualTo(0.0);
-        assertThat(res.getDuration()).isEqualTo("0h 0m 0s");
+        assertThat(res.getDuration()).isEqualTo("0h 0m 0s"); // Default fallback format
     }
 
     @Test
@@ -35,7 +35,7 @@ class OsrmClientTest {
         String json = "{ \"routes\": [ { \"distance\": 12345.678, \"duration\": 3661 } ] }";
         JsonNode n = mapper.readTree(json);
         var res = client.toRouteResponse(n);
-        assertThat(res.getDistanceKm()).isEqualTo(12.346); // 12345.678 m -> 12.345678 km -> rounded to 12.346
+        assertThat(res.getDistanceKm()).isEqualTo(12.3); // 12345.678 m -> 12.345678 km -> rounded to 12.3 (1 decimal)
         assertThat(res.getDuration()).isEqualTo("1h 1m 1s");
     }
 }

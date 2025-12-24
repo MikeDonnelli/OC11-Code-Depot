@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  distance-service:
+    container_name: distance-service
+    build:
+      context: ./distance-service
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  hospital-service:
+    container_name: hospital-service
+    build:
+      context: ./hospital-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - DISTANCE_SERVICE_URL=http://distance-service:8082
+    depends_on:
+      distance-service:
+        condition: service_healthy
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  hospital-ui:
+    container_name: hospital-ui
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      hospital-service:
+        condition: service_healthy
+    networks:
+      - hospital-network
+
+networks:
+  hospital-network:
+    driver: bridge

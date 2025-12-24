@@ -30,5 +30,10 @@ logging:
     org.hibernate.SQL: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN
 
+# Distance service configuration
+distance:
+  service:
+    base-url: ${DISTANCE_SERVICE_URL:http://localhost:8082}
+
 # To enable SQL debug logs for troubleshooting, set the environment variable:
 # LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG and/or enable spring.jpa.show-sql=true in application-dev.yml
