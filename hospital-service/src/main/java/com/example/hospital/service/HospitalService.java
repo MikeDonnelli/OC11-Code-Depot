@@ -36,6 +36,10 @@ public class HospitalService {
         return repository.findBySpecialtyWithMinBeds(specialty, minBeds);
     }
 
+    public List<String> getAllSpecialties() {
+        return repository.findAllDistinctSpecialties();
+    }
+
     @Transactional
     public boolean reserveBed(Long hospitalId, String specialty) {
         Optional<Hospital> oh = repository.findById(hospitalId);

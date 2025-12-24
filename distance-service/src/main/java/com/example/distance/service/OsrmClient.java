@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Locale;
+
 @Component
 public class OsrmClient {
 
@@ -24,7 +26,7 @@ public class OsrmClient {
     }
 
     public Mono<RouteResponse> route(RouteRequest request) {
-        String coords = String.format("%f,%f;%f,%f",
+        String coords = String.format(Locale.US, "%f,%f;%f,%f",
                 request.getFrom().getLon(), request.getFrom().getLat(),
                 request.getTo().getLon(), request.getTo().getLat());
         String uri = "/route/v1/driving/" + coords + "?overview=false&alternatives=false&steps=false";
@@ -42,14 +44,22 @@ public class OsrmClient {
             double distanceMeters = r.has("distance") ? r.get("distance").asDouble(0.0) : 0.0;
             double durationSeconds = r.has("duration") ? r.get("duration").asDouble(0.0) : 0.0;
 
-            // convert meters -> kilometers with 3 decimal precision
-            double distanceKm = Math.round((distanceMeters / 1000.0) * 1000.0) / 1000.0;
+            // convert meters -> kilometers with 1 decimal precision
+            double distanceKm = Math.round((distanceMeters / 1000.0) * 10.0) / 10.0;
 
             long seconds = Math.round(durationSeconds);
             long hours = seconds / 3600;
             long minutes = (seconds % 3600) / 60;
             long secs = seconds % 60;
-            String duration = String.format("%dh %dm %ds", hours, minutes, secs);
+            
+            String duration;
+            if (hours > 0) {
+                duration = String.format("%dh %dm %ds", hours, minutes, secs);
+            } else if (minutes > 0) {
+                duration = String.format("%dm %ds", minutes, secs);
+            } else {
+                duration = String.format("%ds", secs);
+            }
 
             return new RouteResponse(distanceKm, duration);
         }
