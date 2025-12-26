@@ -18,7 +18,7 @@ Cette pipeline GitHub Actions assure la qualité, la sécurité et la fiabilité
   - ✅ Compilation Maven
   - ✅ Exécution des tests unitaires et d'intégration
   - ✅ Génération de rapports de couverture (JaCoCo)
-  - ✅ Upload vers Codecov (optionnel)
+  - 🚫 Upload Codecov (désactivé - rapports disponibles localement)
 
 ### 2. **test-frontend**
 - **Durée estimée** : ~2-3 min
@@ -58,14 +58,17 @@ Cette pipeline GitHub Actions assure la qualité, la sécurité et la fiabilité
   - ✅ Upload des résultats vers GitHub Security
 
 ### 7. **dependency-check**
-- **Durée estimée** : ~5-10 min (première exécution, ensuite plus rapide)
+- ⚠️ **Temporairement désactivé** (en attente de clé API NVD)
+- **Durée estimée** : ~2-3 min (avec clé API) ou 20-30 min (sans clé)
 - **Actions** :
   - ✅ OWASP Dependency Check
   - ✅ Détection de CVE dans les dépendances
+  - ⚠️ Décommenter le job dans ci.yml après obtention de NVD_API_KEY
 
 ## ⏱️ Durée Totale Estimée
 
-**~8-12 minutes** (grâce à la parallélisation)
+**~6-9 minutes** (grâce à la parallélisation)
+- ⚠️ dependency-check désactivé temporairement (gagnerait 20-30 min sans clé API NVD)
 
 ## 🎯 Critères de Succès
 
@@ -78,9 +81,22 @@ La pipeline échoue si :
 
 ## 🔧 Configuration Requise
 
-### Secrets GitHub (optionnels)
-- `CODECOV_TOKEN` : Pour upload de couverture
-- `SONAR_TOKEN` : Pour analyse SonarCloud
+### Secrets GitHub
+
+#### Pour activation future (optionnels)
+- **`NVD_API_KEY`** : Clé API pour National Vulnerability Database (OWASP Dependency Check)
+  - 📝 **Comment obtenir** : 
+    1. Créer un compte gratuit sur [NVD](https://nvd.nist.gov/developers/request-an-api-key)
+    2. Demander une API key (délai ~2 heures)
+    3. Ajouter dans GitHub : Settings → Secrets and variables → Actions → New repository secret
+    4. Décommenter le job `dependency-check` dans ci.yml
+  - ⚠️ **Actuellement désactivé** : Job commenté en attendant l'obtention de la clé
+
+- **`CODECOV_TOKEN`** : Pour upload automatique de couverture vers Codecov.io
+  - ⚠️ **Actuellement désactivé** : Upload commenté, rapports générés localement
+  - Les rapports sont disponibles dans `target/site/jacoco/index.html` après chaque build
+
+- **`SONAR_TOKEN`** : Pour analyse SonarCloud (qualité de code)
 
 ## 📊 Optimisations
 

@@ -38,12 +38,31 @@ jobs:
       working-directory: ./${{ matrix.service }}
       run: mvn jacoco:report
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
       with:
-        files: ./${{ matrix.service }}/target/site/jacoco/jacoco.xml
-        flags: ${{ matrix.service }}
-        name: ${{ matrix.service }}-coverage
+        name: test-results-${{ matrix.service }}-${{ github.run_id }}-${{ github.run_number }}
+        path: |
+          ${{ matrix.service }}/target/surefire-reports/*.xml
+          ${{ matrix.service }}/target/surefire-reports/*.txt
+        retention-days: 30
+
+    - name: Upload coverage reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.service }}-${{ github.run_id }}-${{ github.run_number }}
+        path: ${{ matrix.service }}/target/site/jacoco/
+        retention-days: 30
+
+    # Upload vers Codecov désactivé - rapports disponibles localement dans target/site/jacoco/
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     files: ./${{ matrix.service }}/target/site/jacoco/jacoco.xml
+    #     flags: ${{ matrix.service }}
+    #     name: ${{ matrix.service }}-coverage
 
   # ===== FRONTEND TESTS =====
   test-frontend:
@@ -67,11 +86,27 @@ jobs:
 
     - name: Run tests
       working-directory: ./ui
-      run: npm run test -- --run
+      run: npm run test:coverage -- --run
 
     - name: Build frontend
       working-directory: ./ui
       run: npm run build
+
+    - name: Upload frontend test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-test-results-${{ github.run_id }}-${{ github.run_number }}
+        path: ui/coverage/
+        retention-days: 30
+
+    - name: Upload frontend build
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist-${{ github.run_id }}-${{ github.run_number }}
+        path: ui/dist/
+        retention-days: 7
 
   # ===== CODE QUALITY =====
   code-quality:
@@ -161,13 +196,13 @@ jobs:
         cd certs
         docker run --rm -v $(pwd):/certs -w /certs --entrypoint sh alpine/openssl /certs/generate-certs-san.sh
 
-    - name: Start services with docker-compose
-      run: docker-compose up -d
+    - name: Start services with docker compose
+      run: docker compose up -d
 
     - name: Wait for services to be healthy
       run: |
         echo "Waiting for services to be ready..."
-        timeout 120 bash -c 'until docker-compose ps | grep -q "healthy"; do sleep 5; done'
+        timeout 120 bash -c 'until docker compose ps | grep -q "healthy"; do sleep 5; done'
         sleep 10
 
     - name: Check service health
@@ -181,11 +216,40 @@ jobs:
         docker run --rm \
           -v $(pwd)/load-tests:/scripts \
           --network oc11-code-depot_hospital-network \
-          grafana/k6:latest run /scripts/smoke-test.js
+          grafana/k6:latest run /scripts/smoke-test.js \
+          --out json=/scripts/k6-results.json \
+          --summary-export=/scripts/k6-summary.json \
+          | tee load-tests/k6-output.txt
+
+    - name: Upload k6 test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: k6-smoke-test-results-${{ github.run_id }}-${{ github.run_number }}
+        path: |
+          load-tests/k6-results.json
+          load-tests/k6-summary.json
+          load-tests/k6-output.txt
+        retention-days: 30
+
+    - name: Upload docker logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-logs-${{ github.run_id }}-${{ github.run_number }}
+        path: |
+          docker-compose.logs
+        retention-days: 7
+      continue-on-error: true
+
+    - name: Capture docker logs on failure
+      if: failure()
+      run: docker compose logs > docker-compose.logs
+      continue-on-error: true
 
     - name: Shutdown services
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
 
   # ===== SECURITY SCAN =====
   security-scan:
@@ -211,29 +275,41 @@ jobs:
       with:
         sarif_file: 'trivy-results.sarif'
 
-  # ===== DEPENDENCY CHECK =====
-  dependency-check:
-    name: Dependency Security Check
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Java ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: 'maven'
-
-    - name: Run OWASP Dependency Check
-      working-directory: ./hospital-service
-      run: mvn org.owasp:dependency-check-maven:check
-
-    - name: Upload dependency check report
+    - name: Upload Trivy report as artifact
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: dependency-check-report
-        path: '**/target/dependency-check-report.html'
+        name: trivy-security-report-${{ github.run_id }}-${{ github.run_number }}
+        path: trivy-results.sarif
+        retention-days: 30
+
+  # ===== DEPENDENCY CHECK =====
+  # Job temporairement désactivé en attendant l'obtention de la clé API NVD
+  # Décommenter après avoir configuré le secret NVD_API_KEY dans GitHub
+  # dependency-check:
+  #   name: Dependency Security Check
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Setup Java ${{ env.JAVA_VERSION }}
+  #     uses: actions/setup-java@v4
+  #     with:
+  #       java-version: ${{ env.JAVA_VERSION }}
+  #       distribution: 'temurin'
+  #       cache: 'maven'
+  #
+  #   - name: Run OWASP Dependency Check
+  #     working-directory: ./hospital-service
+  #     env:
+  #       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+  #     run: mvn org.owasp:dependency-check-maven:check -DnvdApiKey=${NVD_API_KEY}
+  #
+  #   - name: Upload dependency check report
+  #     if: always()
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: dependency-check-report
+  #       path: '**/target/dependency-check-report.html'
