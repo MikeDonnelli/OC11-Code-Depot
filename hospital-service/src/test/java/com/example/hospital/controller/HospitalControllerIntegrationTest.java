@@ -63,6 +63,41 @@ class HospitalControllerIntegrationTest {
     }
 
     @Test
+    void findById_existingHospital_returns200() throws Exception {
+        // Hospital with id=1 is seeded in data.sql
+        mockMvc.perform(get("/api/hospitals/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").isNotEmpty())
+                .andExpect(jsonPath("$.lat").isNumber())
+                .andExpect(jsonPath("$.lon").isNumber());
+    }
+
+    @Test
+    void findById_nonExistingHospital_returns404() throws Exception {
+        // Hospital with id=999 does not exist
+        mockMvc.perform(get("/api/hospitals/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getAllSpecialties_returnsNonEmptyList() throws Exception {
+        // data.sql seeds hospitals with various specialties
+        mockMvc.perform(get("/api/hospitals/specialties"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(greaterThan(0))))
+                .andExpect(jsonPath("$", hasItem("cardiology")));
+    }
+
+    @Test
+    void getAllSpecialties_returnsDistinctSpecialties() throws Exception {
+        // Verify that the list contains distinct specialties
+        mockMvc.perform(get("/api/hospitals/specialties"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
     void reserve_success_and_conflict() throws Exception {
         // Hospital with id=1 seeded has cardiology with availableBeds >=1
         mockMvc.perform(post("/api/hospitals/1/reserve?specialty=cardiology"))
