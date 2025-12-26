@@ -92,7 +92,7 @@ jobs:
 
     - name: Run tests
       working-directory: ./ui
-      run: npm run test -- --run
+      run: npm run test:coverage -- --run
 
     - name: Build frontend
       working-directory: ./ui
@@ -226,14 +226,19 @@ jobs:
           -v $(pwd)/load-tests:/scripts \
           --network oc11-code-depot_hospital-network \
           grafana/k6:latest run /scripts/smoke-test.js \
-          --summary-export=/scripts/k6-summary.json
+          --out json=/scripts/k6-results.json \
+          --summary-export=/scripts/k6-summary.json \
+          | tee load-tests/k6-output.txt
 
     - name: Upload k6 test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: k6-smoke-test-results-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
-        path: load-tests/k6-summary.json
+        path: |
+          load-tests/k6-results.json
+          load-tests/k6-summary.json
+          load-tests/k6-output.txt
         retention-days: 30
 
     - name: Upload docker logs on failure
