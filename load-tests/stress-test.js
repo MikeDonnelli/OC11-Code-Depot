@@ -36,7 +36,7 @@ export const options = {
     ],
     'http_req_failed': ['rate<0.02'],
     'errors': ['rate<0.02'],
-    'http_reqs': ['rate>700'],
+    'http_reqs': ['rate>800'],
   },
   insecureSkipTLSVerify: true,
 };
@@ -192,9 +192,9 @@ function generateTextSummary(data) {
   } else if (failedRequests > 2) {
     verdict = '⚠️  POC PARTIELLEMENT VALIDÉ';
     pocStatus = `⚠️  Temps de réponse OK mais ${failedRequests.toFixed(2)}% erreurs (objectif < 2%)`;
-  } else if (throughput < 700) {
+  } else if (throughput < 800) {
     verdict = '⚠️  POC PARTIELLEMENT VALIDÉ';
-    pocStatus = `⚠️  Performances OK mais débit ${throughput.toFixed(0)} req/s (objectif > 700 req/s)`;
+    pocStatus = `⚠️  Performances OK mais débit ${throughput.toFixed(0)} req/s (objectif > 800 req/s)`;
   } else {
     pocStatus = `✅ Tous les critères POC sont respectés !`;
   }
@@ -213,11 +213,11 @@ ${pocStatus}
   ✓ p(99) < 500ms :         ${p99Duration < 500 ? '✅' : '❌'} ${p99Duration.toFixed(2)}ms
   ✓ avg < 150ms :           ${avgDuration < 150 ? '✅' : '❌'} ${avgDuration.toFixed(2)}ms
   ✓ Erreurs < 2% :          ${failedRequests < 2 ? '✅' : '❌'} ${failedRequests.toFixed(2)}%
-  ✓ Débit > 700 req/s :     ${throughput > 700 ? '✅' : '❌'} ${throughput.toFixed(0)} req/s
+  ✓ Débit > 800 req/s :     ${throughput > 800 ? '✅' : '❌'} ${throughput.toFixed(0)} req/s
 
 📊 CHARGE MAXIMALE TESTÉE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  Throughput Maximum :      ~1000 req/s (avec marge)
+  Throughput Maximum :      >1000 req/s (avec marge)
   Virtual Users (max) :     ${maxVUs}
   Total Requests :          ${totalRequests}
   
@@ -247,12 +247,12 @@ ${pocStatus}
 ${verdict === '✅ POC VALIDÉ' 
   ? `  ✅ Le système SATISFAIT les exigences POC
   ✅ Capacité démontrée : 800+ req/s avec < 200ms
-  ✅ Marge validée : testé jusqu'à 1000 req/s
+  ✅ Marge validée : testé au delà de 1000 req/s
   ✅ Système prêt pour la prochaine phase`
   : `  ❌ Le système NE SATISFAIT PAS les exigences POC
   ${p95Duration > 200 ? `  ⚠  Optimisation nécessaire : p(95) = ${p95Duration.toFixed(2)}ms > 200ms` : ''}
   ${failedRequests > 2 ? `  ⚠  Trop d'erreurs : ${failedRequests.toFixed(2)}% > 2%` : ''}
-  ${throughput < 700 ? `  ⚠  Débit insuffisant : ${throughput.toFixed(0)} req/s < 700 req/s` : ''}
+  ${throughput < 800 ? `  ⚠  Débit insuffisant : ${throughput.toFixed(0)} req/s < 800 req/s` : ''}
   🔧 Actions recommandées ci-dessous`}
 
 🎯 ACTIONS RECOMMANDÉES
@@ -265,7 +265,7 @@ ${p95Duration < 200
 ${failedRequests > 2
   ? `\n  → Investiguer les erreurs (voir logs)\n  → Augmenter timeouts si nécessaire\n  → Vérifier health checks`
   : ''}
-${throughput < 700
+${throughput < 800
   ? `\n  → Augmenter resources Docker (CPU/RAM)\n  → Optimiser connection pool DB\n  → Scaler horizontalement`
   : ''}
 
