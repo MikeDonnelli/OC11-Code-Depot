@@ -42,7 +42,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-${{ matrix.service }}-${{ github.ref_name }}-${{ github.run_number }}
+        name: test-results-${{ matrix.service }}-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
         path: |
           ${{ matrix.service }}/target/surefire-reports/*.xml
           ${{ matrix.service }}/target/surefire-reports/*.txt
@@ -52,7 +52,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: coverage-report-${{ matrix.service }}-${{ github.ref_name }}-${{ github.run_number }}
+        name: coverage-report-${{ matrix.service }}-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
         path: ${{ matrix.service }}/target/site/jacoco/
         retention-days: 30
 
@@ -96,7 +96,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: frontend-test-results-${{ github.ref_name }}-${{ github.run_number }}
+        name: frontend-test-results-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
         path: ui/coverage/
         retention-days: 30
 
@@ -104,7 +104,7 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: frontend-dist-${{ github.ref_name }}-${{ github.run_number }}
+        name: frontend-dist-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
         path: ui/dist/
         retention-days: 7
 
@@ -223,7 +223,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: k6-smoke-test-results-${{ github.ref_name }}-${{ github.run_number }}
+        name: k6-smoke-test-results-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
         path: load-tests/k6-summary.json
         retention-days: 30
 
@@ -231,7 +231,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: docker-logs-${{ github.ref_name }}-${{ github.run_number }}
+        name: docker-logs-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
         path: |
           docker-compose.logs
         retention-days: 7
@@ -274,7 +274,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: trivy-security-report-${{ github.ref_name }}-${{ github.run_number }}
+        name: trivy-security-report-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
         path: trivy-results.sarif
         retention-days: 30
 
