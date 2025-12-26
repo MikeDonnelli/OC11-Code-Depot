@@ -1,5 +1,11 @@
 server:
-  port: 8081
+  port: 8444
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEYSTORE_PATH:/app/keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: hospital-service
 
 spring:
   datasource:
@@ -33,7 +39,7 @@ logging:
 # Distance service configuration
 distance:
   service:
-    base-url: ${DISTANCE_SERVICE_URL:http://localhost:8082}
+    base-url: ${DISTANCE_SERVICE_URL:https://distance-service:8443}
 
 # To enable SQL debug logs for troubleshooting, set the environment variable:
 # LOGGING_LEVEL_ORG_HIBERNATE_SQL=DEBUG and/or enable spring.jpa.show-sql=true in application-dev.yml

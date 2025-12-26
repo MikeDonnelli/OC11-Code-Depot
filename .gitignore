@@ -44,3 +44,12 @@ ui/coverage/
 # System files
 .DS_Store
 Thumbs.db
+
+# SSL/TLS Certificates (dev only - never commit private keys!)
+certs/*.key
+certs/*.crt
+certs/*.p12
+certs/*.pem
+certs/*.csr
+certs/*.jks
+certs/*.pfx
