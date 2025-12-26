@@ -38,6 +38,24 @@ jobs:
       working-directory: ./${{ matrix.service }}
       run: mvn jacoco:report
 
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.service }}-${{ github.ref_name }}-${{ github.run_number }}
+        path: |
+          ${{ matrix.service }}/target/surefire-reports/*.xml
+          ${{ matrix.service }}/target/surefire-reports/*.txt
+        retention-days: 30
+
+    - name: Upload coverage reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.service }}-${{ github.ref_name }}-${{ github.run_number }}
+        path: ${{ matrix.service }}/target/site/jacoco/
+        retention-days: 30
+
     # Upload vers Codecov désactivé - rapports disponibles localement dans target/site/jacoco/
     # - name: Upload coverage to Codecov
     #   uses: codecov/codecov-action@v4
@@ -73,6 +91,22 @@ jobs:
     - name: Build frontend
       working-directory: ./ui
       run: npm run build
+
+    - name: Upload frontend test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-test-results-${{ github.ref_name }}-${{ github.run_number }}
+        path: ui/coverage/
+        retention-days: 30
+
+    - name: Upload frontend build
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-dist-${{ github.ref_name }}-${{ github.run_number }}
+        path: ui/dist/
+        retention-days: 7
 
   # ===== CODE QUALITY =====
   code-quality:
@@ -182,7 +216,31 @@ jobs:
         docker run --rm \
           -v $(pwd)/load-tests:/scripts \
           --network oc11-code-depot_hospital-network \
-          grafana/k6:latest run /scripts/smoke-test.js
+          grafana/k6:latest run /scripts/smoke-test.js \
+          --summary-export=/scripts/k6-summary.json
+
+    - name: Upload k6 test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: k6-smoke-test-results-${{ github.ref_name }}-${{ github.run_number }}
+        path: load-tests/k6-summary.json
+        retention-days: 30
+
+    - name: Upload docker logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-logs-${{ github.ref_name }}-${{ github.run_number }}
+        path: |
+          docker-compose.logs
+        retention-days: 7
+      continue-on-error: true
+
+    - name: Capture docker logs on failure
+      if: failure()
+      run: docker compose logs > docker-compose.logs
+      continue-on-error: true
 
     - name: Shutdown services
       if: always()
@@ -211,6 +269,14 @@ jobs:
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
+
+    - name: Upload Trivy report as artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: trivy-security-report-${{ github.ref_name }}-${{ github.run_number }}
+        path: trivy-results.sarif
+        retention-days: 30
 
   # ===== DEPENDENCY CHECK =====
   # Job temporairement désactivé en attendant l'obtention de la clé API NVD
