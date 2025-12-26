@@ -34,8 +34,19 @@ public class HospitalController {
     }
 
     @GetMapping
-    public List<Hospital> findBySpecialty(@RequestParam String specialty, @RequestParam(defaultValue = "1") int minBeds) {
+    public List<Hospital> findBySpecialty(@RequestParam(required = false) String specialty, @RequestParam(defaultValue = "1") int minBeds) {
+        if (specialty == null || specialty.isEmpty()) {
+            // Return all hospitals when specialty is not provided
+            return service.findAll();
+        }
         return service.findBySpecialty(specialty, minBeds);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Hospital> findById(@PathVariable Long id) {
+        return service.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/specialties")

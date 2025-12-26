@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  k6:
+    image: grafana/k6:latest
+    container_name: k6-stress-test
+    command: run /scripts/stress-test.js
+    volumes:
+      - .:/scripts
+    networks:
+      - hospital-network
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 2G
+        reservations:
+          cpus: '2'
+          memory: 1G
+
+networks:
+  hospital-network:
+    external: true
+    name: oc11-code-depot_hospital-network

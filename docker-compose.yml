@@ -55,8 +55,7 @@ services:
       context: ./ui
       dockerfile: Dockerfile
     ports:
-      - "443:443"    # HTTPS
-      - "5173:80"    # HTTP redirect to HTTPS
+      - "443:443"    # HTTPS uniquement
     volumes:
       - ./certs/hospital-ui.crt:/etc/nginx/ssl/hospital-ui.crt:ro
       - ./certs/hospital-ui.key:/etc/nginx/ssl/hospital-ui.key:ro
@@ -65,6 +64,25 @@ services:
         condition: service_healthy
     networks:
       - hospital-network
+
+  # k6 Load Testing (optionnel - décommenter pour lancer des tests)
+  # k6:
+  #   image: grafana/k6:latest
+  #   container_name: k6-load-test
+  #   volumes:
+  #     - ./load-tests:/scripts
+  #   environment:
+  #     - BASE_URL=https://hospital-ui
+  #   networks:
+  #     - hospital-network
+  #   depends_on:
+  #     hospital-ui:
+  #       condition: service_started
+  #   # Décommenter UNE des commandes ci-dessous selon le test souhaité:
+  #   command: run /scripts/smoke-test.js
+  #   # command: run /scripts/hospital-list.js
+  #   # command: run /scripts/hospital-search-distance.js
+  #   # command: run /scripts/stress-test.js
 
 networks:
   hospital-network:
