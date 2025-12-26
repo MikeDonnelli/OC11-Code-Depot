@@ -7,11 +7,17 @@ services:
       context: ./distance-service
       dockerfile: Dockerfile
     ports:
-      - "8082:8082"
+      - "8443:8443"  # HTTPS
+      - "8082:8082"  # HTTP (optionnel, pour compatibilité)
+    volumes:
+      - ./certs/distance-service.p12:/app/keystore.p12:ro
+    environment:
+      - SSL_KEYSTORE_PATH=/app/keystore.p12
+      - SSL_KEYSTORE_PASSWORD=changeit
     networks:
       - hospital-network
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8082/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-check-certificate --quiet --tries=1 --spider https://localhost:8443/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -23,16 +29,21 @@ services:
       context: ./hospital-service
       dockerfile: Dockerfile
     ports:
-      - "8081:8081"
+      - "8444:8444"  # HTTPS
+      - "8081:8081"  # HTTP (optionnel, pour compatibilité)
+    volumes:
+      - ./certs/hospital-service.p12:/app/keystore.p12:ro
     environment:
-      - DISTANCE_SERVICE_URL=http://distance-service:8082
+      - DISTANCE_SERVICE_URL=https://distance-service:8443
+      - SSL_KEYSTORE_PATH=/app/keystore.p12
+      - SSL_KEYSTORE_PASSWORD=changeit
     depends_on:
       distance-service:
         condition: service_healthy
     networks:
       - hospital-network
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:8081/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget --no-check-certificate --quiet --tries=1 --spider https://localhost:8444/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,7 +55,11 @@ services:
       context: ./ui
       dockerfile: Dockerfile
     ports:
-      - "5173:80"
+      - "443:443"    # HTTPS
+      - "5173:80"    # HTTP redirect to HTTPS
+    volumes:
+      - ./certs/hospital-ui.crt:/etc/nginx/ssl/hospital-ui.crt:ro
+      - ./certs/hospital-ui.key:/etc/nginx/ssl/hospital-ui.key:ro
     depends_on:
       hospital-service:
         condition: service_healthy
