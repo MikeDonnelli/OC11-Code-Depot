@@ -32,6 +32,10 @@ public class HospitalService {
         return repository.findById(id);
     }
 
+    public List<Hospital> findAll() {
+        return repository.findAll();
+    }
+
     public List<Hospital> findBySpecialty(String specialty, int minBeds) {
         return repository.findBySpecialtyWithMinBeds(specialty, minBeds);
     }
