@@ -23,6 +23,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Sanitize branch name
+      run: echo "BRANCH_NAME_SAFE=$(echo '${{ github.ref_name }}' | sed 's/\\//-/g')" >> $GITHUB_ENV
+
     - name: Setup Java ${{ env.JAVA_VERSION }}
       uses: actions/setup-java@v4
       with:
@@ -42,7 +45,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: test-results-${{ matrix.service }}-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
+        name: test-results-${{ matrix.service }}-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
         path: |
           ${{ matrix.service }}/target/surefire-reports/*.xml
           ${{ matrix.service }}/target/surefire-reports/*.txt
@@ -52,7 +55,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: coverage-report-${{ matrix.service }}-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
+        name: coverage-report-${{ matrix.service }}-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
         path: ${{ matrix.service }}/target/site/jacoco/
         retention-days: 30
 
@@ -72,6 +75,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Sanitize branch name
+      run: echo "BRANCH_NAME_SAFE=$(echo '${{ github.ref_name }}' | sed 's/\\//-/g')" >> $GITHUB_ENV
 
     - name: Setup Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
@@ -96,7 +102,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: frontend-test-results-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
+        name: frontend-test-results-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
         path: ui/coverage/
         retention-days: 30
 
@@ -104,7 +110,7 @@ jobs:
       if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: frontend-dist-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
+        name: frontend-dist-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
         path: ui/dist/
         retention-days: 7
 
@@ -191,6 +197,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Sanitize branch name
+      run: echo "BRANCH_NAME_SAFE=$(echo '${{ github.ref_name }}' | sed 's/\\//-/g')" >> $GITHUB_ENV
+
     - name: Generate SSL Certificates
       run: |
         cd certs
@@ -223,7 +232,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: k6-smoke-test-results-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
+        name: k6-smoke-test-results-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
         path: load-tests/k6-summary.json
         retention-days: 30
 
@@ -231,7 +240,7 @@ jobs:
       if: failure()
       uses: actions/upload-artifact@v4
       with:
-        name: docker-logs-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
+        name: docker-logs-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
         path: |
           docker-compose.logs
         retention-days: 7
@@ -256,6 +265,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Sanitize branch name
+      run: echo "BRANCH_NAME_SAFE=$(echo '${{ github.ref_name }}' | sed 's/\\//-/g')" >> $GITHUB_ENV
+
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -274,7 +286,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        name: trivy-security-report-${{ replace(github.ref_name, '/', '-') }}-${{ github.run_number }}
+        name: trivy-security-report-${{ env.BRANCH_NAME_SAFE }}-${{ github.run_number }}
         path: trivy-results.sarif
         retention-days: 30
 
