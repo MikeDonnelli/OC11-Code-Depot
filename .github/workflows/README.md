@@ -82,15 +82,6 @@ La pipeline échoue si :
 - `CODECOV_TOKEN` : Pour upload de couverture
 - `SONAR_TOKEN` : Pour analyse SonarCloud
 
-### Badges Recommandés
-
-Ajoutez ces badges au README.md :
-
-```markdown
-![CI/CD](https://github.com/VOTRE_USERNAME/VOTRE_REPO/workflows/CI/CD%20Pipeline/badge.svg)
-[![codecov](https://codecov.io/gh/VOTRE_USERNAME/VOTRE_REPO/branch/main/graph/badge.svg)](https://codecov.io/gh/VOTRE_USERNAME/VOTRE_REPO)
-```
-
 ## 📊 Optimisations
 
 - ✅ **Cache Maven** : Accélère les builds Java
