@@ -38,12 +38,13 @@ jobs:
       working-directory: ./${{ matrix.service }}
       run: mvn jacoco:report
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        files: ./${{ matrix.service }}/target/site/jacoco/jacoco.xml
-        flags: ${{ matrix.service }}
-        name: ${{ matrix.service }}-coverage
+    # Upload vers Codecov désactivé - rapports disponibles localement dans target/site/jacoco/
+    # - name: Upload coverage to Codecov
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     files: ./${{ matrix.service }}/target/site/jacoco/jacoco.xml
+    #     flags: ${{ matrix.service }}
+    #     name: ${{ matrix.service }}-coverage
 
   # ===== FRONTEND TESTS =====
   test-frontend:
@@ -212,28 +213,32 @@ jobs:
         sarif_file: 'trivy-results.sarif'
 
   # ===== DEPENDENCY CHECK =====
-  dependency-check:
-    name: Dependency Security Check
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Java ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: 'maven'
-
-    - name: Run OWASP Dependency Check
-      working-directory: ./hospital-service
-      run: mvn org.owasp:dependency-check-maven:check
-
-    - name: Upload dependency check report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: dependency-check-report
-        path: '**/target/dependency-check-report.html'
+  # Job temporairement désactivé en attendant l'obtention de la clé API NVD
+  # Décommenter après avoir configuré le secret NVD_API_KEY dans GitHub
+  # dependency-check:
+  #   name: Dependency Security Check
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #
+  #   - name: Setup Java ${{ env.JAVA_VERSION }}
+  #     uses: actions/setup-java@v4
+  #     with:
+  #       java-version: ${{ env.JAVA_VERSION }}
+  #       distribution: 'temurin'
+  #       cache: 'maven'
+  #
+  #   - name: Run OWASP Dependency Check
+  #     working-directory: ./hospital-service
+  #     env:
+  #       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+  #     run: mvn org.owasp:dependency-check-maven:check -DnvdApiKey=${NVD_API_KEY}
+  #
+  #   - name: Upload dependency check report
+  #     if: always()
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: dependency-check-report
+  #       path: '**/target/dependency-check-report.html'
