@@ -162,13 +162,13 @@ jobs:
         cd certs
         docker run --rm -v $(pwd):/certs -w /certs --entrypoint sh alpine/openssl /certs/generate-certs-san.sh
 
-    - name: Start services with docker-compose
-      run: docker-compose up -d
+    - name: Start services with docker compose
+      run: docker compose up -d
 
     - name: Wait for services to be healthy
       run: |
         echo "Waiting for services to be ready..."
-        timeout 120 bash -c 'until docker-compose ps | grep -q "healthy"; do sleep 5; done'
+        timeout 120 bash -c 'until docker compose ps | grep -q "healthy"; do sleep 5; done'
         sleep 10
 
     - name: Check service health
@@ -186,7 +186,7 @@ jobs:
 
     - name: Shutdown services
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
 
   # ===== SECURITY SCAN =====
   security-scan:
