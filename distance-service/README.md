@@ -13,8 +13,14 @@ Service Spring Boot minimal pour calculer la distance routière entre deux point
 
 ## Run
 - mvn spring-boot:run
-- Service listens on port 8082
+- Service listens on port 8443 (HTTPS)
+- Endpoint: https://localhost:8443
+
+## Tests & Coverage
+- Run tests: mvn test
+- Generate coverage report: mvn jacoco:report
+- View report: target/site/jacoco/index.html
 
 ## Docker
 - docker build -t distance-service:local .
-- docker run -p 8082:8082 distance-service:local
+- docker run -p 8443:8443 distance-service:local

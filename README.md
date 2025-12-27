@@ -1,6 +1,147 @@
-# OC11-Code-Depot
+# Hospital Routing System
 
-## Workflow Git
+## 📋 Présentation du projet
+
+Système de gestion d'hôpitaux permettant la recherche et la réservation de lits par spécialité avec calcul de distance en temps réel.
+
+### Architecture
+
+Le projet est composé de **3 microservices** communiquant en HTTPS :
+
+- **`distance-service`** (Spring Boot - Port 8443) : Calcul de distances routières via OSRM
+- **`hospital-service`** (Spring Boot - Port 8444) : Gestion des hôpitaux, spécialités et réservations
+- **`hospital-ui`** (Vue 3 + Vite + Nginx - Port 443) : Interface utilisateur web
+
+### Technologies
+
+- **Backend** : Spring Boot 3.1.4, Java 21, H2 Database, JPA
+- **Frontend** : Vue 3, Vite, Vitest
+- **Infrastructure** : Docker Compose, Nginx, SSL/TLS
+- **Tests** : JUnit, Vitest, k6 (load testing)
+- **CI/CD** : GitHub Actions, JaCoCo, Trivy, Maven
+
+### Fonctionnalités principales
+
+- ✅ Liste et recherche d'hôpitaux par spécialité
+- ✅ Calcul de distance et temps de trajet entre points
+- ✅ Recherche de l'hôpital le plus proche avec disponibilité
+- ✅ Réservation de lits par spécialité
+- ✅ Communication sécurisée HTTPS entre services
+- ✅ Tests de charge validant 800+ req/s
+
+---
+
+## 🚀 Démarrage et Tests
+
+### Lancement de l'application
+
+```bash
+# Générer les certificats SSL (première fois uniquement)
+cd certs
+docker run --rm -v $(pwd):/certs -w /certs --entrypoint sh alpine/openssl /certs/generate-certs-san.sh
+
+# Démarrer tous les services
+docker compose up --build -d
+
+# Accéder à l'application
+# https://localhost (accepter le certificat auto-signé)
+```
+
+### Tests
+
+#### Tests unitaires et de couverture
+
+```bash
+# Backend (distance-service et hospital-service)
+cd distance-service  # ou hospital-service
+mvn test
+mvn jacoco:report
+# Rapport : target/site/jacoco/index.html
+
+# Frontend
+cd ui
+npm install
+npm run test:coverage
+# Rapport : ui/coverage/index.html
+```
+
+#### Tests de charge (k6)
+
+```bash
+# Smoke test (rapide - 30s)
+docker run --rm \
+  -v ${PWD}/load-tests:/scripts \
+  --network oc11-code-depot_hospital-network \
+  grafana/k6:latest run /scripts/smoke-test.js
+
+# Stress test (validation POC - 3.5 min)
+docker run --rm --cpus=4 --memory=2g \
+  -v ${PWD}/load-tests:/scripts \
+  --network oc11-code-depot_hospital-network \
+  grafana/k6:latest run /scripts/stress-test.js
+```
+
+📚 **Documentation complète** : [DOCKER.md](DOCKER.md)
+
+---
+
+## 🔄 Pipeline CI/CD
+
+### Déclencheurs
+
+- Push sur `dev-main`
+- Pull Requests vers `dev-main`
+
+### Jobs de la pipeline
+
+1. **test-backend** (matrix: distance-service, hospital-service)
+   - Tests unitaires Maven
+   - Rapports de couverture JaCoCo
+   - Upload des artefacts versionnés
+
+2. **test-frontend**
+   - Tests Vitest avec couverture
+   - Build de production
+   - Upload des artefacts
+
+3. **code-quality**
+   - Analyse statique du code
+
+4. **build-docker**
+   - Build des 3 images Docker
+   - Génération des certificats SSL
+   - Cache GitHub Actions
+
+5. **integration-tests**
+   - Démarrage complet avec docker compose
+   - Health checks HTTPS
+   - Smoke test k6
+   - Upload résultats et logs
+
+6. **security-scan**
+   - Scan Trivy des vulnérabilités
+   - Upload vers GitHub Security
+
+### Artefacts générés
+
+Tous les artefacts sont versionnés : `[nom]-[id-du-run]-[numéro-de-run]`
+
+- Test results (backend × 2, frontend)
+- Coverage reports (backend × 2, frontend)
+- Frontend build
+- k6 test results
+- Docker logs (échec uniquement)
+- Security reports
+
+### Durée estimée
+
+**~6-9 minutes** (grâce à la parallélisation)
+
+📚 **Documentation complète** : [.github/workflows/README.md](.github/workflows/README.md)
+
+---
+
+## 🌿 Workflow Git
 
 **Résumé**
 

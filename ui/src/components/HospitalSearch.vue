@@ -57,7 +57,7 @@ export default {
       try {
         // For POC we will call the hospital endpoint with the full list fetched from /api/hospitals
         // In a real app we could present a list for the user to choose or fetch nearby hospitals.
-        const hospitals = await (await fetch(`/api/hospitals?specialty=${specialty.value}&minBeds=0`)).json()
+        const hospitals = await (await fetch(`/api/hospitals?specialty=${specialty.value}&minBeds=1`)).json()
         const resp = await apiFindNearest({ from: from.value, hospitals })
         // Save the searched specialty with the result
         nearest.value = { ...resp, searchedSpecialty: specialty.value }

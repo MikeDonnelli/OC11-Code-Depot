@@ -33,7 +33,7 @@ class HospitalControllerIntegrationTest {
                 "\"lat\":48.85," +
                 "\"lon\":2.35," +
                 "\"specialties\":[{" +
-                "\"specialty\":\"cardiology\",\"availableBeds\":5}" +
+                "\"specialty\":\"cardiologie\",\"availableBeds\":5}" +
                 "]}";
 
         mockMvc.perform(post("/api/hospitals")
@@ -56,8 +56,8 @@ class HospitalControllerIntegrationTest {
 
     @Test
     void findBySpecialty_returnsList() throws Exception {
-        // data.sql seeds CHU Example with cardiology -> should return at least one
-        mockMvc.perform(get("/api/hospitals?specialty=cardiology&minBeds=1"))
+        // data.sql seeds CHU Example with cardiologie -> should return at least one
+        mockMvc.perform(get("/api/hospitals?specialty=cardiologie&minBeds=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(0))));
     }
@@ -86,7 +86,7 @@ class HospitalControllerIntegrationTest {
         mockMvc.perform(get("/api/hospitals/specialties"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$", hasItem("cardiology")));
+                .andExpect(jsonPath("$", hasItem("cardiologie")));
     }
 
     @Test
@@ -99,13 +99,13 @@ class HospitalControllerIntegrationTest {
 
     @Test
     void reserve_success_and_conflict() throws Exception {
-        // Hospital with id=1 seeded has cardiology with availableBeds >=1
-        mockMvc.perform(post("/api/hospitals/1/reserve?specialty=cardiology"))
+        // Hospital with id=1 seeded has cardiologie with availableBeds >=1
+        mockMvc.perform(post("/api/hospitals/1/reserve?specialty=cardiologie"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", containsString("Reserved")));
 
-        // Hospital with id=2 seeded has cardiology with 0 beds -> expect 409
-        mockMvc.perform(post("/api/hospitals/2/reserve?specialty=cardiology"))
+        // Hospital with id=2 seeded has cardiologie with 0 beds -> expect 409
+        mockMvc.perform(post("/api/hospitals/2/reserve?specialty=cardiologie"))
                 .andExpect(status().isConflict());
     }
 
