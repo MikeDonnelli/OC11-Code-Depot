@@ -28,12 +28,12 @@ class HospitalServiceTest {
     @Test
     void reserveBed_success() {
         Hospital h = new Hospital("Test", 1.0, 2.0);
-        SpecialtyAvailability s = new SpecialtyAvailability("cardiology", 2);
+        SpecialtyAvailability s = new SpecialtyAvailability("cardiologie", 2);
         h.addSpecialty(s);
         when(repository.findById(1L)).thenReturn(Optional.of(h));
         when(repository.save(any(Hospital.class))).thenReturn(h);
 
-        boolean ok = service.reserveBed(1L, "cardiology");
+        boolean ok = service.reserveBed(1L, "cardiologie");
 
         assertThat(ok).isTrue();
         assertThat(h.getSpecialties().get(0).getAvailableBeds()).isEqualTo(1);
@@ -43,11 +43,11 @@ class HospitalServiceTest {
     @Test
     void reserveBed_noBeds() {
         Hospital h = new Hospital("Test", 1.0, 2.0);
-        SpecialtyAvailability s = new SpecialtyAvailability("cardiology", 0);
+        SpecialtyAvailability s = new SpecialtyAvailability("cardiologie", 0);
         h.addSpecialty(s);
         when(repository.findById(1L)).thenReturn(Optional.of(h));
 
-        boolean ok = service.reserveBed(1L, "cardiology");
+        boolean ok = service.reserveBed(1L, "cardiologie");
 
         assertThat(ok).isFalse();
         assertThat(h.getSpecialties().get(0).getAvailableBeds()).isEqualTo(0);
@@ -56,9 +56,9 @@ class HospitalServiceTest {
 
     @Test
     void findBySpecialty_delegatesToRepo() {
-        when(repository.findBySpecialtyWithMinBeds("cardiology", 1)).thenReturn(List.of());
-        List<Hospital> res = service.findBySpecialty("cardiology", 1);
+        when(repository.findBySpecialtyWithMinBeds("cardiologie", 1)).thenReturn(List.of());
+        List<Hospital> res = service.findBySpecialty("cardiologie", 1);
         assertThat(res).isEmpty();
-        verify(repository, times(1)).findBySpecialtyWithMinBeds("cardiology", 1);
+        verify(repository, times(1)).findBySpecialtyWithMinBeds("cardiologie", 1);
     }
 }

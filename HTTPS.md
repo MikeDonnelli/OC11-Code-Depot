@@ -38,13 +38,13 @@ Tous les services utilisent maintenant **HTTPS avec des certificats auto-signés
 
 ## 📋 Ports et Protocoles
 
-| Service           | HTTP (legacy) | HTTPS (secure) | Description                    |
-|-------------------|---------------|----------------|--------------------------------|
-| distance-service  | 8082          | **8443**       | Calcul de distances            |
-| hospital-service  | 8081          | **8444**       | API backend hôpitaux           |
-| hospital-ui       | 5173 (→443)   | **443**        | Interface web (redirect HTTPS) |
+| Service           | Port HTTPS | Description                    |
+|-------------------|------------|--------------------------------|
+| distance-service  | **8443**   | Calcul de distances            |
+| hospital-service  | **8444**   | API backend hôpitaux           |
+| hospital-ui       | **443**    | Interface web                  |
 
-> ⚠️ Les ports HTTP restent ouverts pour compatibilité mais redirigent vers HTTPS
+> 💡 Tous les services utilisent **uniquement HTTPS**. Aucun port HTTP n'est exposé.
 
 ## 🚀 Démarrage
 
@@ -53,15 +53,15 @@ Les certificats doivent être générés avant le premier lancement :
 
 ```bash
 cd certs
-docker run --rm -v ${PWD}:/certs cert-generator
+docker run --rm -v $(pwd):/certs -w /certs --entrypoint sh alpine/openssl /certs/generate-certs-san.sh
 # ou
-bash generate-certs.sh  # Linux/Mac/Git Bash
+bash generate-certs-san.sh  # Linux/Mac/Git Bash
 ```
 
 ### Lancement avec HTTPS
 
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
 ### Vérification

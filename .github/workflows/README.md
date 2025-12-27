@@ -134,7 +134,7 @@ Tous les artefacts sont versionnés avec le format : `[nom]-[id-du-run]-[numéro
 ## 🚀 Améliorations Futures
 
 ### Court terme
-- [ ] Ajouter tests de performance (k6 stress test limité)
+- [ ] Exécuter le stress test complet dans la CI (actuellement seul le smoke test est lancé)
 - [ ] Configurer SonarCloud pour métriques de qualité
 - [ ] Ajouter linting (ESLint pour frontend, Checkstyle pour backend)
 
@@ -145,7 +145,7 @@ Tous les artefacts sont versionnés avec le format : `[nom]-[id-du-run]-[numéro
 
 ### Long terme
 - [ ] Déploiement Kubernetes avec Helm
-- [ ] Tests de charge complets (800 req/s)
+- [ ] Tests de charge complets sur environnement de staging (validation avant production)
 - [ ] Monitoring et alerting (Prometheus + Grafana)
 
 ## 🛠️ Dépannage
