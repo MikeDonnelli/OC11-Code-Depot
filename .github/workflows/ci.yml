@@ -197,6 +197,8 @@ jobs:
         docker run --rm -v $(pwd):/certs -w /certs --entrypoint sh alpine/openssl /certs/generate-certs-san.sh
 
     - name: Start services with docker compose
+      env:
+        OSRM_BASE_URL: https://router.project-osrm.org
       run: docker compose up -d
 
     - name: Wait for services to be healthy

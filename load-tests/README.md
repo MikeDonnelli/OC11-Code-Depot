@@ -44,7 +44,7 @@ Le **stress test** utilise l'exécuteur `ramping-vus` pour maximiser le débit t
 | Script | Description | Charge testée | Durée | Objectif |
 |--------|-------------|---------------|-------|----------|
 | `smoke-test.js` | Test rapide de santé | 3 VUs | 30s | Vérifier que tous les endpoints répondent correctement |
-| `stress-test.js` | **Validation POC** | **10→20 VUs** | **3.5min** | **Maximiser le débit avec p(95)<200ms** |
+| `stress-test.js` | **Validation POC** | **1→5→20 VUs** | **1.5min** | **Maximiser le débit avec p(95)<200ms** |
 
 ### Détails des scénarios
 
@@ -55,13 +55,13 @@ Le **stress test** utilise l'exécuteur `ramping-vus` pour maximiser le débit t
 - **HTTPS** avec `insecureSkipTLSVerify: true`
 
 **stress-test.js** :
-- Montée progressive : 10→15→20 VUs (ramping-vus)
+- Montée progressive : 1→5→20 VUs (ramping-vus, 1m30s)
 - Mix de 4 scénarios :
   - 40% : Liste complète des hôpitaux
-  Test par défaut : `stress-test.js`
-- Réseau Docker : `oc11-code-depot_hospital-networkyon)
+  - 30% : Recherche près de Paris
+  - 20% : Recherche près de Versailles (Île-de-France uniquement)
   - 10% : Récupération d'un hôpital par ID
-- Seuils POC stricts : p(95)<200ms, p(99)<500ms, avg<150ms, erreurs<2%, débit>700 req/s
+- Seuils POC stricts : p(95)<200ms, p(99)<500ms, avg<150ms, erreurs<2%, débit>800 req/s
 - **HTTPS** avec certificats SAN
 - IDs testés : [1, 2] uniquement (correspond à la base de données H2)
 
@@ -225,8 +225,8 @@ vus_max........................: 100     ← Maximum d'utilisateurs
 
 **Configuration:**
 - **Executor:** `ramping-vus` (montée progressive d'utilisateurs virtuels)
-- **Montée progressive:** 10 → 15 → 20 VUs sur 3.5 minutes
-- **Durée totale:** 3.5 minutes
+- **Montée progressive:** 1 → 5 → 20 VUs sur 1m30s
+- **Durée totale:** 1m30s (20s → 40s → 30s)
 - **Critères de validation POC:**
   - ✅ p(95) < 200ms (CRITIQUE)
   - ✅ p(99) < 500ms
@@ -237,8 +237,10 @@ vus_max........................: 100     ← Maximum d'utilisateurs
 **Scénarios mixtes (pondérés):**
 - 40% Liste d'hôpitaux
 - 30% Recherche près de Paris
-- 20% Recherche près de Lyon
+- 20% Recherche près de Versailles (Île-de-France)
 - 10% Récupération d'un hôpital spécifique
+
+**Note:** Les locations de test sont limitées à l'Île-de-France (Paris, Versailles, Saint-Denis) pour compatibilité avec l'instance OSRM locale contenant uniquement les données Île-de-France.
 
 **Résultat:**
 Le test affiche un rapport détaillé avec verdict **POC VALIDÉ** ✅ ou **POC NON VALIDÉ** ❌ selon les critères.

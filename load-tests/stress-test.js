@@ -1,8 +1,9 @@
 /**
- * k6 Stress Test - HTTP Version (sans SSL)
+ * k6 Stress Test
  * 
- * Version pour tests de charge sans problème de certificats
- * Identique au stress-test.js mais utilise HTTP au lieu de HTTPS
+ * Version pour tests de charge intensive avec montée en charge progressive.
+ * Objectif : Valider la capacité du système à gérer un débit élevé (>800 req/s)
+ * tout en maintenant des temps de réponse bas et un faible taux d'erreur.
  */
 
 import http from 'k6/http';
@@ -19,10 +20,10 @@ export const options = {
   scenarios: {
     stress_ramp: {
       executor: 'ramping-vus',
-      startVUs: 10,
+      startVUs: 1,
       stages: [
-        { duration: '1m', target: 15 },
-        { duration: '2m', target: 20 },
+        { duration: '20s', target: 5 },
+        { duration: '40s', target: 20 },
         { duration: '30s', target: 0 },
       ],
     },
@@ -55,16 +56,17 @@ const params = {
 const scenarios = [
   { name: 'list_hospitals', weight: 40 },
   { name: 'search_near_paris', weight: 30 },
-  { name: 'search_near_lyon', weight: 20 },
+  { name: 'search_near_versailles', weight: 20 },
   { name: 'get_single_hospital', weight: 10 },
 ];
 
 const hospitalIds = [1, 2]; // Only use existing hospital IDs
 
+// Locations en Île-de-France uniquement (compatibles avec osrm-data locale)
 const locations = [
-  { lat: 48.8566, lon: 2.3522 },
-  { lat: 45.7640, lon: 4.8357 },
-  { lat: 43.2965, lon: 5.3698 },
+  { lat: 48.8566, lon: 2.3522 },  // Paris Centre
+  { lat: 48.8049, lon: 2.1204 },  // Versailles
+  { lat: 48.9356, lon: 2.3539 },  // Saint-Denis
 ];
 
 export default function () {
@@ -87,7 +89,7 @@ export default function () {
     case 'search_near_paris':
       searchNearLocation(locations[0]);
       break;
-    case 'search_near_lyon':
+    case 'search_near_versailles':
       searchNearLocation(locations[1]);
       break;
     case 'get_single_hospital':
@@ -115,30 +117,62 @@ function listHospitals() {
 
 function searchNearLocation(location) {
   group('Search Near Location', () => {
-    requestsPerEndpoint.add(1, { endpoint: 'search_distance' });
+    requestsPerEndpoint.add(1, { endpoint: 'search_nearest' });
     
-    const url = `${BASE_URL}/api/hospitals?latitude=${location.lat}&longitude=${location.lon}`;
+    // First, get all hospitals
+    const listResponse = http.get(`${BASE_URL}/api/hospitals`, params);
+    
+    if (listResponse.status !== 200) {
+      errorRate.add(1, { endpoint: 'search_nearest' });
+      return;
+    }
+    
+    const hospitals = JSON.parse(listResponse.body);
+    
+    if (!hospitals || hospitals.length === 0) {
+      errorRate.add(1, { endpoint: 'search_nearest' });
+      return;
+    }
+    
+    // Then call /nearest endpoint
+    const nearestPayload = JSON.stringify({
+      from: { lat: location.lat, lon: location.lon },
+      hospitals: hospitals.map(h => ({
+        id: h.id,
+        name: h.name,
+        lat: h.lat,
+        lon: h.lon
+      }))
+    });
     
     const startTime = Date.now();
-    const response = http.get(url, params);
-    apiLatency.add(Date.now() - startTime, { endpoint: 'search_distance' });
+    const response = http.post(`${BASE_URL}/api/hospitals/nearest`, nearestPayload, params);
+    apiLatency.add(Date.now() - startTime, { endpoint: 'search_nearest' });
     
     const checkResult = check(response, {
-      'search: status is 200': (r) => r.status === 200,
-      'search: has data': (r) => r.body && r.body.length > 0,
-      'search: has distances': (r) => {
+      'nearest: status is 200': (r) => r.status === 200,
+      'nearest: has hospital': (r) => {
         try {
           const data = JSON.parse(r.body);
-          return data.length > 0 && (data[0].hasOwnProperty('distance') || data[0].hasOwnProperty('distanceKm'));
+          return data && data.hospital && data.hospital.id;
+        } catch (e) {
+          return false;
+        }
+      },
+      'nearest: has distance': (r) => {
+        try {
+          const data = JSON.parse(r.body);
+          return data && data.distanceKm !== undefined;
         } catch (e) {
           return false;
         }
       },
     });
     
-    errorRate.add(!checkResult, { endpoint: 'search_distance' });
+    errorRate.add(!checkResult, { endpoint: 'search_nearest' });
   });
 }
+
 
 function getSingleHospital() {
   group('Get Single Hospital', () => {

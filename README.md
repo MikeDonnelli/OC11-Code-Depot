@@ -35,16 +35,30 @@ Le projet est composé de **3 microservices** communiquant en HTTPS :
 
 ### Lancement de l'application
 
+**Option 1 : API publique OSRM (recommandé pour CI/tests)**
 ```bash
 # Générer les certificats SSL (première fois uniquement)
 cd certs
 docker run --rm -v $(pwd):/certs -w /certs --entrypoint sh alpine/openssl /certs/generate-certs-san.sh
 
-# Démarrer tous les services
+# Démarrer tous les services (utilise l'API publique OSRM par défaut)
 docker compose up --build -d
 
 # Accéder à l'application
 # https://localhost (accepter le certificat auto-signé)
+```
+
+**Option 2 : OSRM local (recommandé pour dev/load tests)**
+```bash
+# 1. Configurer OSRM local (voir osrm-data/README.md pour détails)
+cd osrm-data
+# Télécharger et traiter les données Île-de-France (~10 min, voir README.md)
+
+# 2. Démarrer avec profil OSRM local
+cd ..
+docker compose --profile local-osrm up --build -d
+
+# Performance : 5-50ms au lieu de 200-1000ms avec API publique
 ```
 
 ### Tests
@@ -74,7 +88,8 @@ docker run --rm \
   --network oc11-code-depot_hospital-network \
   grafana/k6:latest run /scripts/smoke-test.js
 
-# Stress test (validation POC - 3.5 min)
+# Stress test (validation POC - 1.5 min)
+# Note : Pour tests optimaux, utiliser OSRM local (--profile local-osrm)
 docker run --rm --cpus=4 --memory=2g \
   -v ${PWD}/load-tests:/scripts \
   --network oc11-code-depot_hospital-network \
