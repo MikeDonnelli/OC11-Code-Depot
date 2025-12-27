@@ -49,7 +49,12 @@ Thumbs.db
 certs/*.key
 certs/*.crt
 certs/*.p12
+certs/*.p12
 certs/*.pem
 certs/*.csr
 certs/*.jks
 certs/*.pfx
+
+# OSRM Data (volumineux - ne pas commiter)
+osrm-data/*
+!osrm-data/README.md
