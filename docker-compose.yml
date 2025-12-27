@@ -8,7 +8,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8443:8443"  # HTTPS
-      - "8082:8082"  # HTTP (optionnel, pour compatibilité)
     volumes:
       - ./certs/distance-service.p12:/app/keystore.p12:ro
     environment:
@@ -30,7 +29,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8444:8444"  # HTTPS
-      - "8081:8081"  # HTTP (optionnel, pour compatibilité)
     volumes:
       - ./certs/hospital-service.p12:/app/keystore.p12:ro
     environment:

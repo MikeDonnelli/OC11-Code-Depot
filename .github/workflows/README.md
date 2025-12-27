@@ -18,14 +18,17 @@ Cette pipeline GitHub Actions assure la qualité, la sécurité et la fiabilité
   - ✅ Compilation Maven
   - ✅ Exécution des tests unitaires et d'intégration
   - ✅ Génération de rapports de couverture (JaCoCo)
+  - ✅ Upload des artefacts (test results, coverage reports)
   - 🚫 Upload Codecov (désactivé - rapports disponibles localement)
 
 ### 2. **test-frontend**
 - **Durée estimée** : ~2-3 min
 - **Actions** :
   - ✅ Installation des dépendances npm
-  - ✅ Exécution des tests Vitest
+  - ✅ Exécution des tests Vitest avec couverture de code
+  - ✅ Génération de rapports de couverture
   - ✅ Build de production
+  - ✅ Upload des artefacts (coverage, build)
 
 ### 3. **code-quality**
 - **Dépend de** : test-backend, test-frontend
@@ -46,9 +49,11 @@ Cette pipeline GitHub Actions assure la qualité, la sécurité et la fiabilité
 - **Dépend de** : build-docker
 - **Durée estimée** : ~3-5 min
 - **Actions** :
-  - ✅ Démarrage de l'architecture complète (docker-compose)
-  - ✅ Health checks sur tous les services
-  - ✅ Smoke test k6 (30 secondes)
+  - ✅ Démarrage de l'architecture complète (docker compose v2)
+  - ✅ Health checks sur tous les services HTTPS
+  - ✅ Smoke test k6 (30 secondes) via réseau Docker
+  - ✅ Upload des résultats k6 (JSON, summary, output)
+  - ✅ Upload des logs Docker en cas d'échec
 
 ### 6. **security-scan**
 - **Dépend de** : test-backend
@@ -94,9 +99,30 @@ La pipeline échoue si :
 
 - **`CODECOV_TOKEN`** : Pour upload automatique de couverture vers Codecov.io
   - ⚠️ **Actuellement désactivé** : Upload commenté, rapports générés localement
-  - Les rapports sont disponibles dans `target/site/jacoco/index.html` après chaque build
+  - Les rapports sont disponibles dans :
+    - Backend : `target/site/jacoco/index.html` après chaque build
+    - Frontend : `ui/coverage/index.html` après `npm run test:coverage`
 
 - **`SONAR_TOKEN`** : Pour analyse SonarCloud (qualité de code)
+
+## 📊 Artefacts Générés
+
+Tous les artefacts sont versionnés avec le format : `[nom]-[id-du-run]-[numéro de run]`
+
+### Backend (par service)
+- **test-results-[service]-[id-du-run]-[run]** : Résultats des tests unitaires (XML, TXT) - 30 jours
+- **coverage-report-[service]-[id-du-run]-[run]** : Rapports de couverture JaCoCo (HTML, XML, CSV) - 30 jours
+
+### Frontend
+- **frontend-test-results-[id-du-run]-[run]** : Rapports de couverture Vitest - 30 jours
+- **frontend-dist-[id-du-run]-[run]** : Build de production - 7 jours
+
+### Tests d'intégration
+- **k6-smoke-test-results-[id-du-run]-[run]** : Résultats k6 (JSON, summary, output) - 30 jours
+- **docker-logs-[id-du-run]-[run]** : Logs Docker (en cas d'échec uniquement) - 7 jours
+
+### Sécurité
+- **trivy-security-report-[id-du-run]-[run]** : Scan de vulnérabilités (SARIF) - 30 jours
 
 ## 📊 Optimisations
 

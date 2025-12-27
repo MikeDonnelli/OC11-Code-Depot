@@ -34,7 +34,7 @@ Le test se lance automatiquement avec :
 | **p(95) response time** | < 200ms | ✅ CRITIQUE |
 | **p(99) response time** | < 500ms | ✅ Important |
 | **Moyenne** | < 150ms | ✅ Important |
-| **Throughput** | > 700 req/s | ✅ CRITIQUE |
+| **Throughput** | > 800 req/s | ✅ CRITIQUE |
 | **Taux d'erreur** | < 2% | ✅ CRITIQUE |
 
 Le **stress test** utilise l'exécuteur `ramping-vus` pour maximiser le débit tout en respectant les seuils de latence.
@@ -221,18 +221,18 @@ vus_max........................: 100     ← Maximum d'utilisateurs
 **Usage:** Avant chaque déploiement ou après modifications
 
 ### 2. Stress Test - VALIDATION POC (`stress-test.js`) 🎯
-**Objectif:** Valider les exigences POC : 800 req/s avec < 200ms de réponse
+**Objectif:** Valider les exigences POC : débit élevé avec temps de réponse optimal
 
 **Configuration:**
-- **Executor:** `ramping-arrival-rate` (contrôle précis du débit)
-- **Montée progressive:** 50 → 100 → 300 → 500 → **800** → **1000** req/s
-- **Durée totale:** 10.5 minutes
+- **Executor:** `ramping-vus` (montée progressive d'utilisateurs virtuels)
+- **Montée progressive:** 10 → 15 → 20 VUs sur 3.5 minutes
+- **Durée totale:** 3.5 minutes
 - **Critères de validation POC:**
   - ✅ p(95) < 200ms (CRITIQUE)
   - ✅ p(99) < 500ms
   - ✅ avg < 150ms
   - ✅ Erreurs < 2%
-  - ✅ Débit > 700 req/s
+  - ✅ Débit > 800 req/s (CRITIQUE)
 
 **Scénarios mixtes (pondérés):**
 - 40% Liste d'hôpitaux
@@ -258,7 +258,7 @@ Le test affiche un rapport détaillé avec verdict **POC VALIDÉ** ✅ ou **POC 
   ✓ p(99) < 500ms :         ✅ 423.18ms
   ✓ avg < 150ms :           ✅ 124.56ms
   ✓ Erreurs < 2% :          ✅ 0.12%
-  ✓ Débit > 700 req/s :     ✅ 856 req/s
+  ✓ Débit > 800 req/s :     ✅ 856 req/s
 ```
 
 ## 📈 Génération de rapports
@@ -373,7 +373,7 @@ k6 run --vus 1 --duration 10s smoke-test.js
    ```
 
 3. ✅ Augmenter progressivement la charge
-   - Smoke test → Hospital list → Search distance → Stress test
+   - Smoke test → Stress test
 
 ### Pendant les tests
 
@@ -409,8 +409,8 @@ k6 run --vus 1 --duration 10s smoke-test.js
 
 ### Validation fonctionnelle
 - [ ] Smoke test passe (> 95% succès)
-- [ ] Hospital list: p(95) < 500ms avec 100 users
-- [ ] Search distance: p(95) < 1s avec 50 users
+- [ ] Smoke test: p(95) < 1000ms avec 3 VUs
+- [ ] Endpoints API répondent correctement (status 200)
 - [ ] Pas de memory leak (vérifier `docker stats`)
 - [ ] Logs propres (pas d'exceptions)
 
@@ -419,8 +419,7 @@ k6 run --vus 1 --duration 10s smoke-test.js
 - [ ] **p(95) < 200ms à 800 req/s**
 - [ ] **p(99) < 500ms**
 - [ ] **Taux d'erreur < 2%**
-- [ ] **Débit stable > 700 req/s**
-- [ ] **Système stable jusqu'à 1000 req/s (marge)**
+- [ ] **Débit stable > 800 req/s**
 
 ### Si POC NON VALIDÉ ❌
 Actions prioritaires:

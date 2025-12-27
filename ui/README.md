@@ -1,20 +1,27 @@
 # ui (Vue 3 + Vite)
 
-Minimal frontend scaffold for the OC11 POC.
+Interface frontend minimale pour la POC.
 
-Run locally:
+Lancement en local :
 
-1. Install deps:
+1. Installation des dépendances :
 
    npm install
 
-2. Start dev server (proxies `/api` to hospital-service):
+2. Démarrer le serveur de développement (proxie `/api` vers hospital-service) :
 
    npm run dev
 
-3. Run tests:
+3. Lancer les tests :
 
    npm run test
 
-Notes:
-- This is a minimal POC scaffold. Next steps: add UI routing, improve forms, add proper error handling, and add E2E tests with Playwright/Cypress.
+4. Lancer les tests avec couverture :
+
+   npm run test:coverage
+
+   Rapport de couverture : ui/coverage/index.html
+
+Remarques :
+- Il s'agit d'un scaffold minimal pour la POC. Prochaines étapes : ajouter le routage UI, améliorer les formulaires, ajouter une gestion d'erreurs appropriée, et ajouter des tests E2E avec Playwright/Cypress.
+
