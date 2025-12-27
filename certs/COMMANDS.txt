@@ -1,0 +1,16 @@
+# Génération des certificats SSL pour les services
+# Ce fichier contient les commandes à exécuter dans Git Bash ou WSL
+
+# Distance Service
+openssl genrsa -out distance-service.key 2048
+openssl req -new -x509 -key distance-service.key -out distance-service.crt -days 365 -subj "/C=FR/ST=IDF/L=Paris/O=Hospital-POC/OU=Dev/CN=distance-service"
+openssl pkcs12 -export -in distance-service.crt -inkey distance-service.key -out distance-service.p12 -name distance-service -passout pass:changeit
+
+# Hospital Service
+openssl genrsa -out hospital-service.key 2048
+openssl req -new -x509 -key hospital-service.key -out hospital-service.crt -days 365 -subj "/C=FR/ST=IDF/L=Paris/O=Hospital-POC/OU=Dev/CN=hospital-service"
+openssl pkcs12 -export -in hospital-service.crt -inkey hospital-service.key -out hospital-service.p12 -name hospital-service -passout pass:changeit
+
+# Hospital UI (nginx)
+openssl genrsa -out hospital-ui.key 2048
+openssl req -new -x509 -key hospital-ui.key -out hospital-ui.crt -days 365 -subj "/C=FR/ST=IDF/L=Paris/O=Hospital-POC/OU=Dev/CN=hospital-ui"

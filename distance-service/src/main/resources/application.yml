@@ -1,0 +1,16 @@
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: ${SSL_KEYSTORE_PATH:/app/keystore.p12}
+    key-store-password: ${SSL_KEYSTORE_PASSWORD:changeit}
+    key-store-type: PKCS12
+    key-alias: distance-service
+
+osrm:
+  baseUrl: ${OSRM_BASE_URL:https://router.project-osrm.org}
+
+logging:
+  level:
+    org.springframework.web: INFO
+    com.example.distance: DEBUG

@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  osrm:
+    container_name: osrm-backend
+    image: osrm/osrm-backend:latest
+    profiles:
+      - local-osrm
+    volumes:
+      - ./osrm-data:/data
+    command: osrm-routed --algorithm mld /data/france-latest.osrm
+    ports:
+      - "5000:5000"
+    networks:
+      - hospital-network
+
+  distance-service:
+    container_name: distance-service
+    build:
+      context: ./distance-service
+      dockerfile: Dockerfile
+    ports:
+      - "8443:8443"  # HTTPS
+    volumes:
+      - ./certs/distance-service.p12:/app/keystore.p12:ro
+    environment:
+      - SSL_KEYSTORE_PATH=/app/keystore.p12
+      - SSL_KEYSTORE_PASSWORD=changeit
+      - OSRM_BASE_URL=${OSRM_BASE_URL:-http://osrm:5000}
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate --quiet --tries=1 --spider https://localhost:8443/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  hospital-service:
+    container_name: hospital-service
+    build:
+      context: ./hospital-service
+      dockerfile: Dockerfile
+    ports:
+      - "8444:8444"  # HTTPS
+    volumes:
+      - ./certs/hospital-service.p12:/app/keystore.p12:ro
+    environment:
+      - DISTANCE_SERVICE_URL=https://distance-service:8443
+      - SSL_KEYSTORE_PATH=/app/keystore.p12
+      - SSL_KEYSTORE_PASSWORD=changeit
+    depends_on:
+      distance-service:
+        condition: service_healthy
+    networks:
+      - hospital-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-check-certificate --quiet --tries=1 --spider https://localhost:8444/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  hospital-ui:
+    container_name: hospital-ui
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    ports:
+      - "443:443"    # HTTPS uniquement
+    volumes:
+      - ./certs/hospital-ui.crt:/etc/nginx/ssl/hospital-ui.crt:ro
+      - ./certs/hospital-ui.key:/etc/nginx/ssl/hospital-ui.key:ro
+    depends_on:
+      hospital-service:
+        condition: service_healthy
+    networks:
+      - hospital-network
+
+  # k6 Load Testing (optionnel - décommenter pour lancer des tests)
+  # k6:
+  #   image: grafana/k6:latest
+  #   container_name: k6-load-test
+  #   volumes:
+  #     - ./load-tests:/scripts
+  #   environment:
+  #     - BASE_URL=https://hospital-ui
+  #   networks:
+  #     - hospital-network
+  #   depends_on:
+  #     hospital-ui:
+  #       condition: service_started
+  #   # Décommenter UNE des commandes ci-dessous selon le test souhaité:
+  #   command: run /scripts/smoke-test.js
+  #   # command: run /scripts/hospital-list.js
+  #   # command: run /scripts/hospital-search-distance.js
+  #   # command: run /scripts/stress-test.js
+
+networks:
+  hospital-network:
+    driver: bridge
